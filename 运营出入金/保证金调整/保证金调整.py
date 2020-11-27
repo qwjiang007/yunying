@@ -3,6 +3,7 @@ import pymysql
 import os
 import xlwings as xw
 
+this_file = os.path.realpath(__file__)
 def zs_trans(zs_df):
     mgn_ref = ['幻方' if cus == '宁波幻方量化投资管理合伙企业（有限合伙）' or cus == '浙江九章-宁波幻方量化'
                else '九章' for cus in zs_df['管理人'].tolist()]
@@ -32,7 +33,7 @@ def zs_trans(zs_df):
             wb.close()
             #print('done')
 
-raw_info = pd.read_excel('E:\PythonCode\运营出入金\保证金调整/警告信息.xlsx')['警告信息'].tolist()
+raw_info = pd.read_excel(os.path.join(os.path.dirname(this_file),'警告信息.xlsx'))['警告信息'].tolist()
 errors = []
 code_list = []
 ft_broker_list = []
@@ -111,7 +112,7 @@ sk_df = pd.DataFrame({
 })
 
 dt = str(pd.datetime.today().date())
-writer = pd.ExcelWriter('E:\PythonCode\运营出入金\保证金调整/保证金调整 {}.xlsx'.format(dt),engine='xlsxwriter')
+writer = pd.ExcelWriter(os.path.join(os.path.dirname(this_file),'保证金调整 {}.xlsx'.format(dt)),engine='xlsxwriter')
 ft_df.set_index('产品编码').to_excel(writer, sheet_name='银期')
 sk_df.set_index('产品编码').to_excel(writer, sheet_name='银证')
 writer.save()
