@@ -8,7 +8,7 @@ import numpy as np
 
 this_file = os.path.realpath(__file__)
 #this_file = "E:/PythonCode/运营出入金/产品费用出金/"
-cus_balance_conf = os.path.join(os.path.dirname(this_file), '..', '..','..','configs', 'cus_balance_config.yml')
+cus_balance_conf = os.path.join(os.path.dirname(this_file), '..', '..','configs', 'cus_balance_config.yml')
 with open(cus_balance_conf, 'r', encoding='utf8') as conf:
     cus_balance_configs = yaml.safe_load(conf)
 
