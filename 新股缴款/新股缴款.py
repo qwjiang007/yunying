@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import xlwings as xw
+from tools.db_connect import get_fund_db
 
 
 this_file = os.path.realpath(__file__)
@@ -30,7 +31,7 @@ for filename in os.listdir(source):
         #管理人
         mng_lst = sub_info['管理人'].tolist()
         mng_ref = []
-        print('管理人', mng_lst)
+        #print('管理人', mng_lst)
         for mn in mng_lst:
             #print('管理人',mn)
             if mn == "浙江九章-宁波幻方量化":
@@ -92,6 +93,34 @@ for filename in os.listdir(source):
                 sht.range("A4").value = new_info
                 wb.save(os.path.join(output, filename.strip('.xlsx') + ' '+ surfix + '.xlsx'))
                 wb.close()
+            elif cus == "广发证券":
+                sub_sub_info['新股代码'] = codes
+                trans_tp = ['网下新股业务-上海' if int(code) >= 600000 else "网下新股业务-深圳" for code in codes]
+                sub_sub_info['划款类别'] = trans_tp
+                date_lst = sub_sub_info['划款日期'].tolist()
+                d_lst = [dt.date().strftime("%Y/%m/%d") for dt in date_lst]
+                sub_sub_info['划款日期'] = d_lst
+                payee_act = []
+                #连接数据库查询付款方账号
+                for name in sub_sub_info['产品名称']:
+                    with get_fund_db() as cur:
+                        sql = "SELECT * FROM 资金账户匹配 WHERE 产品名称 = '{}'".format(name)
+                        cur.execute(sql)
+                        res = cur.fetchall()
+                    if res:
+                        payee_act.append(res[0]['托管银行账号'])
+                    else:
+                        payee_act.append('产品名称有误，无法查询到托管银行账号')
+                sub_sub_info['付款方账号'] = payee_act
+                new_info = sub_sub_info[['产品名称', '划款类别', '划款日期', "划款金额",'付款方账号','资金账号/对手方账号', '划款摘要','新股代码']]
+                new_info.columns = new_info.iloc[0]
+                new_info = new_info.iloc[1:].set_index(list(new_info)[0])
+                wb = xw.Book(os.path.join(os.path.dirname(this_file), '模板', '广发-模板.xls'))
+                sht = wb.sheets['Sheet1']
+                sht.range("A2").value = new_info
+                wb.save(os.path.join(output, filename.strip('.xlsx') + ' '+ surfix + '.xls'))
+                wb.close()
+                #获取
             else:
                 # 打开模板获取表头
                 wb = xw.Book(os.path.join(os.path.dirname(this_file), '模板','模板.xlsx'))
